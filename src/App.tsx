@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
 import QRCode from "qrcode";
 import { generatePromptPayPayload } from "./lib/promptpay";
+import "./App.css";
 
 function App() {
   const [target, setTarget] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
+  const [hasQr, setHasQr] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   function handleGenerateClick() {
@@ -13,55 +15,116 @@ function App() {
 
     try {
       const parsedAmount = amount.trim() ? Number(amount) : undefined;
-      const payload = generatePromptPayPayload({ target, amount: parsedAmount});
+      const payload = generatePromptPayPayload({ target, amount: parsedAmount });
 
       if (canvasRef.current) {
-        QRCode.toCanvas(canvasRef.current, payload, { width: 250 }, function (err) {
-          if (err) console.error(err);
-        });
+        QRCode.toCanvas(
+          canvasRef.current,
+          payload,
+          { width: 220, margin: 1, color: { dark: "#1B1035", light: "#FFFFFF" } },
+          function (err) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            setHasQr(true);
+          }
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
+      setHasQr(false);
 
       if (canvasRef.current) {
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) ctx.clearRect(0, 0, canvasRef.current.width,canvasRef.current.height);
+        const ctx = canvasRef.current.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
       }
     }
   }
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif'}}>
-      <h2>สร้าง PromptPay QR Code</h2>
+    <div className="page">
+      <div className="glow" aria-hidden="true" />
+      <main className="card">
+        <header className="card__header">
+          <span className="eyebrow">พร้อมเพย์ · PromptPay</span>
+          <h1>สร้าง QR รับเงิน</h1>
+          <p className="subtitle">กรอกเบอร์โทรหรือเลขบัตรประชาชน แล้วสแกนโอนได้จริงทันที</p>
+        </header>
 
-      <div style={{ marginBottom: '10px'}}>
-        <input placeholder="เบอร์โทร หรือ เลขบัตรประชาชน" 
-        value={target} 
-        onChange={(e) => setTarget(e.target.value)} 
-        style={{ padding: '8px', width: '250px' }} />
-      </div>
+        <div className="card__body">
+          <div className="form">
+            <label className="field">
+              <span className="field__label">เบอร์โทรศัพท์ หรือ เลขบัตรประชาชน</span>
+              <input
+                className="field__input"
+                placeholder="0812345678"
+                value={target}
+                maxLength={13}
+                onChange={(e) => {
+                  // กรองเอาเฉพาะตัวเลข และตัดให้ไม่เกิน 13 หลัก
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  if (val.length <= 13) {
+                    setTarget(val);
+                  }
+                }}
+              />
+            </label>
 
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          placeholder="จำนวนเงิน (ไม่บังคับ)"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          type="number" // ดักให้พิมพ์ได้แต่ตัวเลข
-          style={{ padding: '8px', width: '250px' }} />
-      </div>
+            <label className="field">
+              <span className="field__label">จำนวนเงิน (บาท)</span>
+              <div className="amount-input">
+                <span className="amount-input__prefix">฿</span>
+                <input
+                  className="field__input field__input--amount"
+                  placeholder="0.00 (ไม่บังคับ)"
+                  type="number"
+                  min="0"
+                  value={amount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    // ให้พิมพ์ได้แค่ค่าว่าง หรือตัวเลขที่ไม่ติดลบ
+                    if (val === "" || Number(val) >= 0) {
+                      setAmount(val);
+                    }
+                  }}
+                />
+              </div>
+              <span className="field__hint">เว้นว่างได้ถ้าต้องการให้ผู้โอนพิมพ์จำนวนเงินเอง</span>
+            </label>
 
-      <button onClick={handleGenerateClick} style={{ padding: '8px 16px' }}>
-        สร้าง QR
-      </button>
+            {error && (
+              <div className="error" role="alert">
+                {error}
+              </div>
+            )}
 
-      {/* ถ้ามี error ให้โชว์ข้อความสีแดง */}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {/* พื้นที่สำหรับวาด QR Code */}
-      <div style={{ marginTop: '20px' }}>
-        <canvas ref={canvasRef} />
-      </div>
-      
+            <button className="submit-btn" onClick={handleGenerateClick}>
+              สร้าง QR
+            </button>
+          </div>
+
+          <div className="qr-slip">
+            <div className={`qr-slip__frame ${hasQr ? "is-ready" : ""}`}>
+              <canvas ref={canvasRef} className="qr-slip__canvas" />
+              {!hasQr && (
+                <div className="qr-slip__placeholder">
+                  <span>QR จะแสดงที่นี่</span>
+                </div>
+              )}
+            </div>
+            <div className="qr-slip__perforation" aria-hidden="true">
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span key={i} />
+              ))}
+            </div>
+            <span className="qr-slip__label">มาตรฐาน EMVCo · ธนาคารแห่งประเทศไทย</span>
+          </div>
+        </div>
+      </main>
+      <p className="footnote">ข้อมูลของคุณไม่ถูกส่งไปที่เซิร์ฟเวอร์ใดๆ — QR ถูกสร้างขึ้นในเบราว์เซอร์ของคุณทั้งหมด</p>
     </div>
-  )
+  );
 }
 
 export default App;
