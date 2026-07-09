@@ -7,15 +7,15 @@ describe("generatePromptPayPayload", () => {
   // });
   it("ควรสร้าง payload สำหรับเบอร์โทรศัพท์ (0812345678) แบบไม่ระบุยอดเงินได้ถูกต้อง", () => {
     const expected = 
-      "000201" + // Payload Format Indicator
-      "010211" + // Point of Initiation Method (Static)
-      "2937" + // Merchant Account Information
-      "0016A000000677010111" + // GUID
-      "01130066812345678" + // Mobile
-      "5802TH" + // Country Code
-      "5303764" + // Currency
-      "6304" + // CRC placeholder
-      "5D82"; // CRC
+      "000201" + // รูปแบบ Payload
+      "010211" + // รูปแบบ QR (11 = Static)
+      "2937" + // ข้อมูลบัญชีผู้รับเงิน (PromptPay)
+      "0016A000000677010111" + // รหัส GUID มาตรฐาน
+      "01130066812345678" + // เบอร์โทรศัพท์
+      "5802TH" + // รหัสประเทศ (TH)
+      "5303764" + // สกุลเงินบาท (764)
+      "6304" + // ตำแหน่งค่า CRC-16
+      "5D82"; // ค่า CRC-16 ที่คำนวณได้
     
     const result = generatePromptPayPayload({ target: "0812345678" });
     expect(result).toBe(expected);
@@ -26,15 +26,15 @@ describe("generatePromptPayPayload", () => {
 
   it("ควรสร้าง payload สำหรับเลขบัตรประชาชน แบบไม่ระบุยอดเงินได้ถูกต้อง", () => {
     const expected = 
-      "000201" + // Payload Format Indicator
-      "010211" + // Point of Initiation Method (Static)
-      "2937" + // Merchant Account Information
-      "0016A000000677010111" + // GUID
-      "02131234567890123" + // National ID
-      "5802TH" + // Country Code
-      "5303764" + // Currency
-      "6304" + // CRC placeholder
-      "EC40"; // CRC
+      "000201" + // รูปแบบ Payload
+      "010211" + // รูปแบบ QR (11 = Static)
+      "2937" + // ข้อมูลบัญชีผู้รับเงิน (PromptPay)
+      "0016A000000677010111" + // รหัส GUID มาตรฐาน
+      "02131234567890123" + // เลขบัตรประชาชน
+      "5802TH" + // รหัสประเทศ (TH)
+      "5303764" + // สกุลเงินบาท (764)
+      "6304" + // ตำแหน่งค่า CRC-16
+      "EC40"; // ค่า CRC-16 ที่คำนวณได้
     
     const result = generatePromptPayPayload({ target: "1234567890123" });
     expect(result).toBe(expected);
@@ -43,9 +43,9 @@ describe("generatePromptPayPayload", () => {
 
   it("ควรสร้าง payload สำหรับเบอร์โทรศัพท์ แบบระบุยอดเงินได้ถูกต้อง", () => {
     const result = generatePromptPayPayload({ target: "0812345678", amount: 100 });
-    expect(result).toContain("010212"); // Dynamic QR
-    expect(result).toContain("0016A000000677010111"); // GUID
-    expect(result).toContain("5406100.00"); // Amount tag 54, len 06, val 100.00
+    expect(result).toContain("010212"); // เปลี่ยนเป็น 12 (Dynamic QR) เมื่อมียอดเงิน
+    expect(result).toContain("0016A000000677010111"); // รหัส GUID มาตรฐาน
+    expect(result).toContain("5406100.00"); // Tag 54: ยอดเงิน (ยาว 06, ค่า 100.00)
     expect(result.length).toBe(84);
   });
 
@@ -94,14 +94,14 @@ describe("generatePromptPayPayload", () => {
 
   it("ควรคำนวณค่า CRC-16 Checksum ได้ถูกต้องเป๊ะๆ", () => {
     const expectedPayloadBeforeCrc = 
-      "000201" + // Payload Format Indicator
-      "010211" + // Point of Initiation Method (Static)
-      "2937" + // Merchant Account Information
-      "0016A000000677010111" + // GUID
-      "01130066812345678" + // Mobile
-      "5802TH" + // Country Code
-      "5303764" + // Currency
-      "6304"; // CRC placeholder
+      "000201" + // รูปแบบ Payload
+      "010211" + // รูปแบบ QR (11 = Static)
+      "2937" + // ข้อมูลบัญชีผู้รับเงิน (PromptPay)
+      "0016A000000677010111" + // รหัส GUID มาตรฐาน
+      "01130066812345678" + // เบอร์โทรศัพท์
+      "5802TH" + // รหัสประเทศ (TH)
+      "5303764" + // สกุลเงินบาท (764)
+      "6304"; // ตำแหน่งค่า CRC-16
     
     const result = generatePromptPayPayload({ target: "0812345678" });
     const payloadBeforeCrc = result.slice(0, -4);
