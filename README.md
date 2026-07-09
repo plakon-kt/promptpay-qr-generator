@@ -35,4 +35,10 @@ npm run test
 
 ## Deployment
 
-*(รออัปเดตหลังจากทำการ Deploy เสร็จสิ้น)*
+โปรเจกต์นี้ได้รับการนำขึ้นระบบออนไลน์ (Deploy) เรียบร้อยแล้วผ่านทาง **Cloudflare Workers / Pages**
+
+🔗 **ลิงก์สำหรับใช้งานจริง:** [https://promptpay-qr-generator.plakon-kt.workers.dev](https://promptpay-qr-generator.plakon-kt.workers.dev)
+
+หากต้องการนำไป Deploy บน Cloudflare ด้วยตัวเอง:
+1. เชื่อมต่อ Repository นี้เข้ากับ Cloudflare Pages
+2. Cloudflare จะจัดการ Build ด้วยคำสั่ง `npm run build` และดึงโฟลเดอร์ `dist` ขึ้นไปโชว์ให้โดยอัตโนมัติ
