@@ -5,7 +5,7 @@ describe("generatePromptPayPayload", () => {
   // it("อธิบายว่าเทสนี้เช็คอะไร", () => {
   //   expect(ผลลัพธ์ที่ได้).toBe(ผลลัพธ์ที่คาดหวัง);
   // });
-  it("should generate payload for mobile number (0812345678) without amount", () => {
+  it("ควรสร้าง payload สำหรับเบอร์โทรศัพท์ (0812345678) แบบไม่ระบุยอดเงินได้ถูกต้อง", () => {
     const expected = 
       "000201" + // Payload Format Indicator
       "010211" + // Point of Initiation Method (Static)
@@ -24,7 +24,7 @@ describe("generatePromptPayPayload", () => {
     expect(result.slice(-4)).toMatch(/^[0-9A-F]{4}$/);
   });
 
-  it("should generate payload for Thai National ID without amount", () => {
+  it("ควรสร้าง payload สำหรับเลขบัตรประชาชน แบบไม่ระบุยอดเงินได้ถูกต้อง", () => {
     const expected = 
       "000201" + // Payload Format Indicator
       "010211" + // Point of Initiation Method (Static)
@@ -41,7 +41,7 @@ describe("generatePromptPayPayload", () => {
     expect(result.length).toBe(74);
   });
 
-  it("should generate payload with amount for mobile number", () => {
+  it("ควรสร้าง payload สำหรับเบอร์โทรศัพท์ แบบระบุยอดเงินได้ถูกต้อง", () => {
     const result = generatePromptPayPayload({ target: "0812345678", amount: 100 });
     expect(result).toContain("010212"); // Dynamic QR
     expect(result).toContain("0016A000000677010111"); // GUID
@@ -49,50 +49,50 @@ describe("generatePromptPayPayload", () => {
     expect(result.length).toBe(84);
   });
 
-  it("should generate payload with decimal amount", () => {
+  it("ควรสร้าง payload แบบระบุยอดเงินมีทศนิยมได้ถูกต้อง", () => {
     const result = generatePromptPayPayload({ target: "0812345678", amount: 100.5 });
     expect(result).toContain("5406100.50");
     expect(result.length).toBe(84);
   });
 
-  it("should throw error for invalid input (too short)", () => {
+  it("ควรแจ้งเตือน Error เมื่อข้อมูลสั้นเกินไป", () => {
     expect(() => generatePromptPayPayload({ target: "123" })).toThrow();
   });
 
-  it("should throw error for invalid input (non-Thai format)", () => {
+  it("ควรแจ้งเตือน Error เมื่อข้อมูลยาวเกินไป (ผิดฟอร์แมต)", () => {
     expect(() => generatePromptPayPayload({ target: "123456789012345" })).toThrow();
   });
 
-  it("should throw error for negative amount", () => {
+  it("ควรแจ้งเตือน Error เมื่อยอดเงินติดลบ", () => {
     expect(() => generatePromptPayPayload({ target: "0812345678", amount: -100 })).toThrow();
   });
 
-  it("should throw error for zero amount", () => {
+  it("ควรแจ้งเตือน Error เมื่อยอดเงินเป็น 0", () => {
     expect(() => generatePromptPayPayload({ target: "0812345678", amount: 0 })).toThrow();
   });
 
-  it("should return same string for same valid input", () => {
+  it("ควรคืนค่าผลลัพธ์เหมือนเดิมเสมอ หากใส่ข้อมูลเดิม (Deterministic)", () => {
     const input = { target: "0812345678", amount: 100 };
     const result1 = generatePromptPayPayload(input);
     const result2 = generatePromptPayPayload(input);
     expect(result1).toBe(result2);
   });
 
-  it("should use corrected 0066 prefix for Thai phone numbers", () => {
+  it("ควรแปลงเบอร์โทรศัพท์ให้ขึ้นต้นด้วย 0066 ได้ถูกต้อง", () => {
     const result = generatePromptPayPayload({ target: "0987654321" });
     expect(result).toContain("0066987654321");
     expect(result).not.toContain("0987654321");
   });
 
-  it("should throw for Thai phone number with less than 10 digits", () => {
+  it("ควรแจ้งเตือน Error เมื่อเบอร์โทรศัพท์มีไม่ถึง 10 หลัก", () => {
     expect(() => generatePromptPayPayload({ target: "081234567" })).toThrow("ข้อมูลไม่ถูกต้อง");
   });
 
-  it("should throw for ID with less than 13 digits", () => {
+  it("ควรแจ้งเตือน Error เมื่อเลขบัตรประชาชนมีไม่ถึง 13 หลัก", () => {
     expect(() => generatePromptPayPayload({ target: "123456789012" })).toThrow("ข้อมูลไม่ถูกต้อง");
   });
 
-  it("should validate CRC16 calculation", () => {
+  it("ควรคำนวณค่า CRC-16 Checksum ได้ถูกต้องเป๊ะๆ", () => {
     const expectedPayloadBeforeCrc = 
       "000201" + // Payload Format Indicator
       "010211" + // Point of Initiation Method (Static)
