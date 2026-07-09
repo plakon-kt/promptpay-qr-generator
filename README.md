@@ -1,32 +1,38 @@
-# React + TypeScript + Vite
+# PromptPay QR Code Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+แอปพลิเคชันสร้างคิวอาร์โค้ดพร้อมเพย์ (PromptPay QR) สำหรับรับโอนเงิน เพียงแค่กรอกเบอร์โทรศัพท์หรือเลขบัตรประชาชน (สามารถระบุยอดเงินได้ถ้าต้องการ) ก็จะได้ QR Code ที่สามารถใช้แอปธนาคารสแกนจ่ายได้ทันที
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React** & **TypeScript**
+- **Vite** (Build Tool)
+- **qrcode** (Library สำหรับวาด QR Code ลงบน Canvas)
+- **Vitest** (สำหรับทำ Unit Testing)
 
-## React Compiler
+## How it works
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+การทำงานหลังบ้านจะสร้างข้อมูล (Payload) ตามมาตรฐานสากล EMVCo ซึ่งเป็นรูปแบบที่ระบบ PromptPay ของไทยใช้ โดยเอาข้อมูลต่างๆ เช่น รหัสรับโอน, เบอร์โทร/เลขบัตร, และยอดเงิน มาหั่นและประกอบกันในรูปแบบ TLV (Tag-Length-Value) เรียงต่อกันเป็นข้อความยาวๆ จากนั้นจะปิดท้ายด้วยขั้นตอนที่สำคัญที่สุดคือการคำนวณค่า CRC16 เพื่อป้องกันข้อมูลผิดเพี้ยน เมื่อได้ชุดข้อความที่สมบูรณ์แล้วจึงจะนำไปแปลงเป็นภาพ QR Code ให้เราสแกนได้
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+สำหรับใครที่อยากลองรันโปรเจกต์นี้บนเครื่องตัวเอง ให้โคลน (Clone) โปรเจกต์ลงมาแล้วรันคำสั่งตามนี้ครับ:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Testing
+
+```bash
+npm run test
+```
+
+โปรเจกต์นี้มีการทดสอบ (Unit Test) อย่างจริงจังถึง 13 เคส เพื่อเช็คความถูกต้องของระบบสร้าง Payload เช่น:
+- ตรวจสอบรูปแบบเบอร์โทรศัพท์และเลขบัตรประชาชนว่าถูกต้องตามเงื่อนไข
+- ตรวจสอบว่าระบบสามารถดัก Error ได้ หากกรอกข้อมูลผิด เช่น ยอดเงินติดลบ หรือเลขไม่ครบ
+- ตรวจสอบความแม่นยำของสมการเข้ารหัสและคำนวณค่า CRC-16 เพื่อให้แอปธนาคารอ่านข้อมูลได้ไม่ผิดเพี้ยน
+
+## Deployment
+
+*(รออัปเดตหลังจากทำการ Deploy เสร็จสิ้น)*
