@@ -1,122 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useRef } from "react";
+import QRCode from "qrcode";
+import { generatePromptPayPayload } from "./lib/promptpay";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [target, setTarget] = useState("");
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState("");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  function handleGenerateClick() {
+    setError("");
+
+    try {
+      const parsedAmount = amount.trim() ? Number(amount) : undefined;
+      const payload = generatePromptPayPayload({ target, amount: parsedAmount});
+
+      if (canvasRef.current) {
+        QRCode.toCanvas(canvasRef.current, payload, { width: 250 }, function (err) {
+          if (err) console.error(err);
+        });
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
+
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvasRef.current.width,canvasRef.current.height);
+      }
+    }
+  }
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif'}}>
+      <h2>สร้าง PromptPay QR Code</h2>
 
-      <div className="ticks"></div>
+      <div style={{ marginBottom: '10px'}}>
+        <input placeholder="เบอร์โทร หรือ เลขบัตรประชาชน" 
+        value={target} 
+        onChange={(e) => setTarget(e.target.value)} 
+        style={{ padding: '8px', width: '250px' }} />
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <div style={{ marginBottom: '10px' }}>
+        <input
+          placeholder="จำนวนเงิน (ไม่บังคับ)"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          type="number" // ดักให้พิมพ์ได้แต่ตัวเลข
+          style={{ padding: '8px', width: '250px' }} />
+      </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <button onClick={handleGenerateClick} style={{ padding: '8px 16px' }}>
+        สร้าง QR
+      </button>
+
+      {/* ถ้ามี error ให้โชว์ข้อความสีแดง */}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* พื้นที่สำหรับวาด QR Code */}
+      <div style={{ marginTop: '20px' }}>
+        <canvas ref={canvasRef} />
+      </div>
+      
+    </div>
   )
 }
 
-export default App
+export default App;
