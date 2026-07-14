@@ -1,6 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import QRCode from "qrcode";
-import { generatePromptPayPayload } from "./lib/promptpay";
 import "./App.css";
 
 function App() {
@@ -10,17 +9,48 @@ function App() {
   const [hasQr, setHasQr] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  function handleGenerateClick() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("target");
+    const a = params.get("amount");
+    if (t) {
+      const val = t.replace(/[^0-9]/g, '');
+      if (val.length <= 13) setTarget(val);
+    }
+    if (a && Number(a) >= 0) setAmount(a);
+  }, []);
+
+  
+    async function handleGenerateClick() {
     setError("");
 
     try {
       const parsedAmount = amount.trim() ? Number(amount) : undefined;
-      const payload = generatePromptPayPayload({ target, amount: parsedAmount });
+      
+      // ยิง API ไปที่ Cloudflare Functions ของเรา
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target: target,
+          amount: parsedAmount,
+        }),
+      });
 
+      const data = await response.json();
+      console.log("📤 [Frontend] ข้อมูล JSON ที่ตอบกลับมาจากเซิร์ฟเวอร์:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์");
+      }
+
+      // นำ Payload ที่ได้มาสร้างภาพ QR
       if (canvasRef.current) {
         QRCode.toCanvas(
           canvasRef.current,
-          payload,
+          data.payload,
           { width: 220, margin: 1, color: { dark: "#1B1035", light: "#FFFFFF" } },
           function (err) {
             if (err) {
@@ -41,6 +71,8 @@ function App() {
       }
     }
   }
+
+
 
   return (
     <div className="page">
