@@ -1,0 +1,6 @@
+name = "promptpay-api"
+main = "worker/index.ts"
+compatibility_date = "2024-07-14"
+
+[build]
+command = ""

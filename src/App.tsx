@@ -27,8 +27,9 @@ function App() {
     try {
       const parsedAmount = amount.trim() ? Number(amount) : undefined;
       
-      // ยิง API ไปที่ Cloudflare Functions ของเรา
-      const response = await fetch("/api/generate", {
+      const apiUrl = import.meta.env.VITE_API_URL || "";
+      // ยิง API ไปที่ Cloudflare Worker ของเรา
+      const response = await fetch(`${apiUrl}/api/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
