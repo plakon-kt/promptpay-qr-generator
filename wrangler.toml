@@ -1,4 +1,4 @@
-name = "promptpay-api"
+name = "promptpay-qr-generator"
 main = "worker/index.ts"
 compatibility_date = "2024-07-14"
 
